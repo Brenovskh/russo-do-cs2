@@ -1,0 +1,375 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Russo do CS2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: HUD de transmissão — barra de placar no topo, filtros fixos, glossário em lista densa estilo scoreboard */
+:root{
+  --bg:#eef0f3; --panel:#ffffff; --fg:#14181f; --muted:#5b6472; --line:#d5dae2;
+  --t:#b8730f; --ct:#2f6fb5; --accent:#c4451c; --chip:#e3e7ed;
+  --display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1217; --panel:#171b22; --fg:#e8ebf0; --muted:#929bab; --line:#272d38;
+  --t:#e3a23c; --ct:#6aa6ec; --accent:#ff7a4d; --chip:#212733; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1217; --panel:#171b22; --fg:#e8ebf0; --muted:#929bab; --line:#272d38;
+  --t:#e3a23c; --ct:#6aa6ec; --accent:#ff7a4d; --chip:#212733; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;padding-inline:16px;padding-block:20px 48px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+a{color:var(--ct)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 18px}
+.score .side{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.score .side b{display:block;font-family:var(--display);font-size:clamp(15px,2.6vw,20px);letter-spacing:0;text-transform:none}
+.score .t b{color:var(--t)} .score .ct{text-align:right} .score .ct b{color:var(--ct)}
+.score .mid{text-align:center;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.score .mid strong{display:block;font-family:var(--display);font-size:clamp(22px,4vw,32px);color:var(--fg);font-weight:700;font-variant-numeric:tabular-nums}
+
+header h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,5vw,40px);line-height:1.1;margin:0 0 8px;text-wrap:balance}
+header p{margin:0;max-width:65ch;color:var(--muted)}
+
+h2{font-family:var(--display);font-weight:500;font-size:19px;margin:0 0 12px;text-wrap:balance}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+
+.watch{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.watch .card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;min-width:0}
+.watch .card h3{margin:0 0 6px;font-size:15px;font-weight:600}
+.watch .card p{margin:0;font-size:14px;color:var(--muted)}
+.watch .card code{font-family:var(--mono);font-size:12.5px;background:var(--chip);padding:1px 5px;border-radius:3px;color:var(--fg)}
+
+.tools{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#q{flex:1 1 220px;min-width:0;font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:5px;background:var(--panel);color:var(--fg)}
+button{font:inherit;cursor:pointer;border-radius:5px}
+.chip{font-size:13px;padding:5px 10px;border:1px solid transparent;background:var(--chip);color:var(--fg)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.act{font-size:13px;padding:8px 12px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+.act:hover{border-color:var(--accent)}
+#count{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.cat{display:flex;flex-direction:column}
+.cat h2{display:flex;align-items:baseline;gap:10px;padding-top:14px}
+.cat h2 span{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:400}
+.term{display:grid;grid-template-columns:minmax(0,15rem) minmax(0,1fr);gap:4px 20px;padding:10px 0;border-top:1px solid var(--line)}
+.term .ru{font-weight:600;font-size:17px}
+.term .ru small{display:block;font-family:var(--mono);font-size:11.5px;font-weight:400;color:var(--muted)}
+.term .pt{min-width:0}
+.term .ex{display:block;margin-top:3px;font-size:14px;color:var(--muted)}
+.term .ex q{color:var(--fg);font-style:italic;quotes:"«" "»"}
+.empty{padding:24px 0;color:var(--muted)}
+
+.tips ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;max-width:72ch}
+footer{font-size:13px;color:var(--muted)}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:5px;font-size:14px}
+#tsv{width:100%;height:120px;font-family:var(--mono);font-size:12px;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:5px}
+@media (max-width:560px){.term{grid-template-columns:1fr}.score{grid-template-columns:1fr 1fr}.score .mid{grid-column:1/-1;order:-1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="score" aria-label="ESL Pro League Season 24">
+    <div class="side t">Атака · T<b>Terroristas</b></div>
+    <div class="mid">ESL Pro League S24<strong>03–11.10</strong>Katowice</div>
+    <div class="side ct">Защита · CT<b>Contraterroristas</b></div>
+  </div>
+
+  <header>
+    <h1>Russo do CS2</h1>
+    <p>Gírias, termos e bordões que os narradores russos usam. Busque em russo ou português, filtre por categoria e copie tudo para o Anki. Os termos estão sem acento tônico, como você prefere.</p>
+  </header>
+
+  <section>
+    <div class="eyebrow">Onde assistir</div>
+    <h2>Transmissão em russo</h2>
+    <div class="watch">
+      <div class="card">
+        <h3>Paragon (canal oficial russo)</h3>
+        <p>Na Season 23 a ESL licenciou o russo para a Paragon: <a href="https://www.twitch.tv/cs2_paragon_ru" target="_blank" rel="noopener">twitch.tv/cs2_paragon_ru</a>, também no <a href="https://okko.sport/" target="_blank" rel="noopener">Okko Sport</a>. Para a S24 o Liquipedia ainda não lista, mas deve repetir.</p>
+      </div>
+      <div class="card">
+        <h3>Confira no dia</h3>
+        <p>Na página do torneio no Liquipedia, a seção <code>Streams</code> (bandeira 🇷🇺) é atualizada perto do início. Cuidado: <code>cs2_maincast</code> transmite em <b>ucraniano</b>, não em russo.</p>
+      </div>
+      <div class="card">
+        <h3>Times para torcer em russo</h3>
+        <p>Team Spirit (donk, sh1ro, zont1x, magixx, tN1R), BetBoom (Boombl4), PARIVISION (Jame). As partidas deles costumam ter os narradores mais empolgados.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="tools">
+    <div class="row">
+      <label for="q" class="eyebrow" style="margin:0;flex-basis:100%">Glossário</label>
+      <input id="q" type="search" placeholder="Buscar: дефуз, economia, клатч…" autocomplete="off">
+      <button class="act" id="copy" type="button">Copiar para Anki (TSV)</button>
+      <span id="count"></span>
+    </div>
+    <div class="row" id="chips" role="group" aria-label="Categorias"></div>
+  </div>
+
+  <div id="list"></div>
+  <textarea id="tsv" hidden readonly aria-label="TSV para importar no Anki"></textarea>
+
+  <section class="tips">
+    <div class="eyebrow">Como estudar</div>
+    <h2>Rotina para os dias de jogo</h2>
+    <ol>
+      <li><b>Antes de 03/10:</b> passe uma vez pelas categorias "Narração" e "Ações". São as palavras que você vai ouvir a cada round.</li>
+      <li><b>Mude o jogo para russo.</b> Steam → CS2 → Propriedades → Idioma → Русский. O HUD, a loja e o rádio do jogo viram vocabulário passivo de graça.</li>
+      <li><b>Assista ao vivo sem pausar</b> e só anote palavras que se repetem. Narração ao vivo é rápida; o objetivo é pegar padrões, não tudo.</li>
+      <li><b>Reveja os VODs no YouTube com o Language Reactor.</b> As legendas automáticas em russo funcionam bem para narração, e você já tem o Lexa configurado.</li>
+      <li><b>Leia notícias em russo</b> depois das partidas: <a href="https://www.cybersport.ru" target="_blank" rel="noopener">cybersport.ru</a> e <a href="https://bo3.gg/ru" target="_blank" rel="noopener">bo3.gg/ru</a> têm resumos de cada jogo com o mesmo vocabulário. Dá para abrir no Readlang.</li>
+      <li><b>Busque no YouTube:</b> <code>словарь сленга CS2</code>, <code>сленг кс для новичков</code>, <code>лучшие моменты комментаторов кс</code> e os vlogs do canal da Team Spirit.</li>
+    </ol>
+  </section>
+
+  <footer>A categoria "Da narração real" usa frases curtas transcritas (Whisper) dos melhores momentos da Okko: Spirit x Vitality (IEM Rio 2026) e Spirit x Falcons (Major de Colônia 2026). Nas outras categorias, os exemplos são frases típicas de narração escritas para estudo. As gírias variam entre narradores; quando ouvir uma que não está aqui, ela provavelmente é uma variação de algo da lista.</footer>
+</div>
+<div id="toast" hidden></div>
+
+<script>
+const CATS={
+ real:"Da narração real",
+ narr:"Narração",
+ acao:"Ações e jogadas",
+ eco:"Economia",
+ arma:"Armas e equipamento",
+ nade:"Granadas",
+ mapa:"Mapas e posições",
+ torneio:"Formato e torneio",
+ giria:"Gíria geral"
+};
+// [categoria, russo, nota (origem/variante), português, exemplo RU, exemplo PT]
+const D=[
+["real", "Пачка", "= бомба", "Bomba (gíria: 'pacote')", "Пачка ставится. 40 секунд на ретейк.", "A bomba está sendo plantada. 40 segundos para o retake. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Дефать", "раздефать, задефать", "Desarmar (gíria de defuse)", "Даже если он сядет дефать, времени уже нет.", "Mesmo que ele comece a desarmar, já não dá tempo. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Приемка", "на приемке", "Posição que recebe a entrada inimiga", "Здесь Тнир на приемке.", "Aqui o tN1R está na posição de recepção. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Опорник", "опорный игрок", "Âncora (defensor fixo do bomb)", "Надо искать обязательно опорников.", "Precisa achar os âncoras de qualquer jeito. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Дуэль", "выиграть/проиграть дуэль", "Duelo (troca 1x1)", "Дуэль с Apex'ом. И он ее проигрывает.", "Duelo com o apEX. E ele perde. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Мазать", "мажет; промах", "Errar o tiro; erro", "Очень аномальные промахи от ZywOo.", "Erros muito anormais do ZywOo. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Битый", "крайне битый; красный", "Ferido, com pouca vida", "Даня все еще крайне битый.", "O Danya (donk) ainda está muito ferido. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Меньшинство", "большинство", "Desvantagem numérica (o oposto: большинство)", "Атака продолжит в меньшинстве.", "O ataque vai seguir em desvantagem numérica. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Пробить", "пробитие", "Romper / abrir uma área", "Яму пробили.", "Romperam o Pit. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Додавить", "продавить, давить", "Pressionar até tomar", "Можно просто додавить базу.", "Dá para simplesmente pressionar até tomar o bomb. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Поджим", "поджать", "Avanço agressivo, apertar uma posição", "Неудачный поджим.", "Avanço mal-sucedido. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Перестрелять", "перестреливает", "Vencer na troca de tiros", "FlameZ перестреливает в упоре.", "FlameZ vence a troca de tiros à queima-roupa. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "В упоре", "—", "À queima-roupa, colado", "FlameZ перестреливает в упоре.", "FlameZ vence a troca de tiros à queima-roupa. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Забайтить", "байт", "Fazer bait (sacrificar/atrair o inimigo)", "Забайтили на всех.", "Fizeram todo mundo cair no bait. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Чекать", "дочекать, зачекать", "Checar um ângulo/posição", "Не дочекал он Zont1x'а.", "Ele não checou o zont1x direito. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Лейтово", "поздний таймер", "Tarde (no round), 'late'", "Лейтово пробили мид.", "Romperam o mid já tarde. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "По бокам", "сыграть по бокам", "Pelos lados (jogar nas laterais do mapa)", "Лучше сыграть по бокам.", "É melhor jogar pelos lados. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Киты", "= кусачки", "Kits de desarme", "Там киты есть, там есть и смок.", "Lá tem kits, tem smoke também. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Допы", "дополнительное время", "Prorrogação (gíria)", "И мы увидим допы.", "E vamos ver prorrogação. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Лосс-бонус", "loss bonus", "Bônus de derrota (economia)", "Лосс-бонус не в нуле.", "O loss bonus não está zerado. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Антифорс", "anti-force", "Round contra force buy", "Выиграли антифорс, выиграли антиэко.", "Ganharam o anti-force, ganharam o anti-eco. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Сплит", "split", "Split (ataque por dois lados)", "И уже сплит.", "E já é um split. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Энтрик", "энтри-фрагер", "Entry (abate de entrada / jogador)", "Энтрик отдает сначала под Б.", "Ele entrega o entry primeiro no B. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Квадро", "квадрокилл; дабл, даблкил", "Quadra kill (4 abates)", "Квадро для Андрея.", "Quadra kill para o Andrey (tN1R). (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Импакт", "impact", "Impacto (jogador decisivo)", "Ну и вновь импакт.", "E de novo, impacto. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Свитч", "switch; свичнуть", "Trocar de arma", "Будет ли Даня с авиком свитч на калаш?", "Será que o Danya troca da AWP para a AK? (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Ган", "gun", "Arma (gíria)", "Он замечает, но не успевает свичнуть на ган.", "Ele vê, mas não dá tempo de trocar para a arma. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Смена сторон", "—", "Troca de lados (meio do mapa)", "Это последний раунд перед сменой сторон.", "É o último round antes da troca de lados. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Потянуть таймер", "переждать", "Enrolar, gastar o tempo", "Нужно просто потянуть таймер.", "Só precisa gastar o tempo. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Раскрутиться", "раскрутка", "Embalar (numa sequência de abates)", "Как раскрутился на три убийства!", "Como ele embalou em três abates! (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Подсадка", "подсаживаться", "Boost (subir no colega)", "Либо подсаживаться в окно, либо заходить в коннектор.", "Ou dar boost para a janela, ou entrar pelo conector. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Перетянуться", "перетяжка", "Reposicionar / rotacionar curto", "Очень своевременно перетянулись обратно.", "Reposicionaram de volta bem na hora. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "На подстраховке", "подстраховать", "Dando cobertura", "Мэджикс также есть на подстраховке.", "O magixx também está na cobertura. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Заспотать", "спот", "Avistar (spottar) um inimigo", "Заспотал он Мэджикса.", "Ele avistou o magixx. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Фулл блайнд", "full blind", "Totalmente cego (flash)", "Фулл блайнд ловит.", "Ele toma um full blind. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Кроссфайер", "crossfire", "Fogo cruzado", "Карриган хороший кроссфайер держит.", "O karrigan segura um bom fogo cruzado. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Стрейф", "strafe", "Movimento lateral ao atirar", "Хороший стрейф от Карригана.", "Bom strafe do karrigan. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Выжигать", "выжечь", "Expulsar com molotov ('queimar')", "Зонтикса оттуда выжигают.", "Tiram o zont1x de lá na molotov. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Загэмблить", "gamble", "Apostar / arriscar uma leitura", "Решили именно в этом раунде загэмблить.", "Decidiram arriscar justamente neste round. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Флексить", "flex", "Sair da posição para outra", "Если бы кто-то из Спирит начал бы флексить...", "Se alguém da Spirit começasse a mudar de posição... (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Гэп", "gap", "Vantagem no placar", "Но два раунда гэпа все еще есть.", "Mas ainda há dois rounds de vantagem. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Ставить головы", "ставит голову", "Acertar headshots", "Он максимально строго ставит головы.", "Ele crava headshots com total precisão. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Халявный", "халява; фри-фраг", "De graça (kill/round fácil)", "Подарили халявный килл и халявный раунд.", "Deram um kill e um round de graça. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Апсет", "upset", "Zebra (resultado surpreendente)", "Может случиться первый в истории апсет.", "Pode acontecer a primeira zebra da história. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Спина горит", "в спину", "'As costas estão pegando fogo' (estão sendo flanqueados)", "Спина. Спина горит.", "As costas! Estão flanqueando! (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Кто кого?", "—", "Quem leva? (antes de um duelo)", "Кто кого? Apex эту зону контролирует уверенно.", "Quem leva? O apEX controla essa área com segurança. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Ой-ой-ой!", "—", "Exclamação de surpresa/perigo", "Ой-ой-ой, как неприятно.", "Ai ai ai, que desagradável. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Валидол", "—", "'Remédio para o coração': momento de tensão", "Валидол.", "Haja coração. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Поймать с поличным", "—", "Pegar em flagrante", "Донка только что с поличным поймали.", "Acabaram de pegar o donk em flagrante. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Не говори гоп, пока не перепрыгнешь", "—", "Não conte vitória antes da hora (provérbio)", "Не говори гоп, пока не перепрыгнешь.", "Não comemore antes de pular o obstáculo. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Задача со звездочкой", "—", "Tarefa difícil, desafio extra", "Это задача со звездочкой.", "É uma tarefa nível difícil. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "С ног на голову", "перевернуться", "De cabeça para baixo (virada total)", "Раунд переворачивается с ног на голову.", "O round vira de cabeça para baixo. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Винты", "Nuke", "Vents (Nuke)", "Молик сразу в винты.", "A molotov vai direto nos vents. (Spirit x Vitality, IEM Rio 2026)"],
+["real", "Вода", "Ancient", "Water (Ancient)", "Пропустил проходящего через воду противника.", "Deixou passar o inimigo que veio pela água. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Темпл", "Ancient", "Temple (Ancient)", "Вдвоем действительно через темпл.", "Os dois vão mesmo pelo temple. (Spirit x Falcons, Major Colônia 2026)"],
+["real", "Мейн", "main", "Main (entrada principal de um bomb)", "Будет гасить всех, кто будет выходить из-под мейна.", "Vai derrubar todo mundo que sair do main. (Spirit x Falcons, Major Colônia 2026)"],
+
+["narr","Минус один","—","Menos um (um jogador morto)","Минус один, и сразу минус два!","Menos um, e logo menos dois!"],
+["narr","Какой выстрел!","—","Que tiro!","Какой выстрел от донка!","Que tiro do donk!"],
+["narr","Вот это да!","—","Uau! Olha isso!","Вот это да, он забрал троих!","Uau, ele levou três!"],
+["narr","Невероятно","—","Inacreditável","Это просто невероятно!","Isso é simplesmente inacreditável!"],
+["narr","Безумие","—","Loucura","Что за безумие здесь происходит!","Que loucura está acontecendo aqui!"],
+["narr","Он это делает!","—","Ele consegue! Ele faz!","Он это делает! Клатч один против трех!","Ele consegue! Clutch um contra três!"],
+["narr","Один против трех","1v3","Um contra três (1v3)","Остался один против трех.","Sobrou um contra três."],
+["narr","Остался один","—","Sobrou um","У Спирит остался один игрок.","A Spirit ficou com um jogador."],
+["narr","Бомба заложена","—","Bomba plantada","Бомба заложена на А.","Bomba plantada no A."],
+["narr","Успевает ли он?","—","Ele vai conseguir a tempo?","Дефузит... успевает ли он?","Desarmando... será que dá tempo?"],
+["narr","Не успевает!","—","Não dá tempo!","Не успевает! Бомба взрывается!","Não dá tempo! A bomba explode!"],
+["narr","Время уходит","—","O tempo está acabando","Время уходит, им надо заходить.","O tempo está acabando, eles precisam entrar."],
+["narr","Раунд за ними","—","O round é deles","Раунд за Фурией!","O round é da FURIA!"],
+["narr","Тащит","тащить","Está carregando (o time)","Донк тащит всю карту.","Donk está carregando o mapa todo."],
+["narr","В голову!","—","Na cabeça!","В голову, через смок!","Na cabeça, através da smoke!"],
+["narr","Сумасшедший раунд","—","Round insano","Какой сумасшедший раунд!","Que round insano!"],
+["narr","Камбэк","comeback","Virada","Неужели камбэк?","Será que vem a virada?"],
+["narr","Серия раундов","—","Sequência de rounds","Серия из пяти раундов подряд.","Sequência de cinco rounds seguidos."],
+["narr","Подряд","—","Seguidos, em sequência","Третий раунд подряд.","Terceiro round seguido."],
+["narr","Счет","—","Placar","Счет 10:8 в пользу Мауз.","Placar 10 a 8 para a MOUZ."],
+["narr","В пользу","—","A favor de","Счет в пользу Виталити.","Placar a favor da Vitality."],
+["narr","Сравнять счет","—","Empatar o placar","Нави сравнивают счет.","A NAVI empata o placar."],
+
+["acao","Фраг","frag; фрагать","Abate, kill","Четыре фрага в этом раунде.","Quatro kills neste round."],
+["acao","Убийство","—","Abate (termo formal)","Первое убийство за Т.","Primeiro abate para os TRs."],
+["acao","Клатч","clutch; клатчить","Clutch","Он вытаскивает клатч!","Ele tira o clutch!"],
+["acao","Вытащить раунд","—","Salvar/ganhar um round difícil","Он один вытащил раунд.","Ele ganhou o round sozinho."],
+["acao","Эйс","ace","Ace (matar os cinco)","Эйс от донка!","Ace do donk!"],
+["acao","Энтри","entry","Entry, quem entra primeiro","Энтри-фраг от зонтикса.","Entry kill do zont1x."],
+["acao","Открыть раунд","—","Abrir o round (primeiro abate)","Сайрен открывает раунд.","s1ren abre o round."],
+["acao","Размен","разменять(ся)","Trade (troca de abates)","Хороший размен на точке.","Bom trade no bomb."],
+["acao","Трейд","trade","Trade","Нет трейда, он слишком далеко.","Sem trade, ele está longe demais."],
+["acao","Заход","заходить","Entrada/execução no bomb","Быстрый заход на Б.","Entrada rápida no B."],
+["acao","Выход","выходить","Saída para uma área / execução","Выход через банан.","Saída pelo banana."],
+["acao","Раш","rush; рашить","Rush","Пять человек рашат Б!","Cinco jogadores dando rush no B!"],
+["acao","Ретейк","retake","Retake","Защита идет на ретейк.","A defesa vai para o retake."],
+["acao","Ротация","ротироваться","Rotação","Поздняя ротация на А.","Rotação atrasada para o A."],
+["acao","Лурк","lurk; лурковать","Lurk (jogar escondido sozinho)","Он лурковал весь раунд.","Ele ficou de lurk o round inteiro."],
+["acao","Стак","stack; застакаться","Stack (vários num bomb)","Они застакались на Б.","Eles estão stackados no B."],
+["acao","Фейк","fake; фейкнуть","Fake","Отличный фейк на А, а заход на Б.","Ótimo fake no A, e a entrada no B."],
+["acao","Пик","peek; пикнуть","Peek (aparecer no ângulo)","Рискованный пик на мид.","Peek arriscado no mid."],
+["acao","Держать","держать позицию / холдить","Segurar (posição/ângulo)","Он держит длинную.","Ele segura o long."],
+["acao","Угол","—","Ângulo / canto","Неожиданный угол!","Ângulo inesperado!"],
+["acao","Префаер","prefire","Prefire","Чистый префаер в окно.","Prefire limpo na janela."],
+["acao","Прострел","прострелить","Wallbang (tiro através de parede)","Прострел через дверь!","Wallbang pela porta!"],
+["acao","Ваншот","one shot","Matar com um tiro","Ваншот с дигла.","Um tiro de Deagle."],
+["acao","Тап","tap; тапнуть","Tap (tiro único preciso)","Ван-тап в голову.","One tap na cabeça."],
+["acao","Спрей","spray","Spray","Контроль спрея на высоте.","Controle de spray no ponto."],
+["acao","Зажал","зажать","Segurou o gatilho (spray contínuo)","Зажал и забрал двоих.","Segurou o spray e levou dois."],
+["acao","Флик","flick","Flick","Невероятный флик!","Flick inacreditável!"],
+["acao","Ноускоп","noscope","Noscope","Ноускоп с авика!","Noscope de AWP!"],
+["acao","Заложить бомбу","закладывать","Plantar a bomba","Успели заложить бомбу.","Conseguiram plantar."],
+["acao","Плент","plant","Plant / também o bombsite","Плент на Б.","Plant no B."],
+["acao","Дефуз","defuse; дефузить, раздефузить","Desarmar a bomba","Он садится на дефуз.","Ele começa a desarmar."],
+["acao","Сейв","save; сейвиться","Save (salvar a arma)","Т сейвятся, раунд проигран.","Os TRs salvam, round perdido."],
+["acao","Ослепить","слепой","Cegar (com flash)","Он ослеплен, ничего не видит.","Ele está cego, não vê nada."],
+["acao","Контроль карты","—","Controle de mapa","Спирит забирают контроль мида.","A Spirit toma o controle do mid."],
+["acao","Тайминг","timing","Timing","Идеальный тайминг!","Timing perfeito!"],
+["acao","Зарезать","нож","Matar na faca","Зарезал ножом в спину!","Matou na faca pelas costas!"],
+
+["eco","Экономика","—","Economia","Экономика у Т сломана.","A economia dos TRs está quebrada."],
+["eco","Закуп","закупиться","Compra (do round)","Полный закуп у обеих команд.","Compra completa dos dois times."],
+["eco","Фулбай","full buy; полный закуп","Full buy","Это их первый фулбай.","Esse é o primeiro full buy deles."],
+["eco","Эко","eco; экоинг","Eco (round econômico)","Эко-раунд у Нави.","Round eco da NAVI."],
+["eco","Форс","force buy; форсить","Force buy","Они форсят после пистолетки.","Eles fazem force depois do pistol."],
+["eco","Пистолетка","пистолетный раунд","Pistol round","Пистолетка за Фалконс.","O pistol é da Falcons."],
+["eco","Антиэко","—","Anti-eco","Нельзя проигрывать антиэко.","Não dá para perder o anti-eco."],
+["eco","Деньги","денег нет","Dinheiro","У них нет денег на авп.","Eles não têm dinheiro para AWP."],
+["eco","Бонус","—","Bônus (round após vencer o pistol)","Бонусный раунд после пистолетки.","Round bônus depois do pistol."],
+["eco","Дроп","drop; дропнуть","Drop (passar arma)","Дропнул авик тиммейту.","Dropou a AWP para o colega."],
+
+["arma","Авп / Авик","AWP","AWP","Широ с авиком на миде.","sh1ro com a AWP no mid."],
+["arma","Снайпер","авапер","Sniper / AWPer","Лучший снайпер турнира.","O melhor AWPer do torneio."],
+["arma","Муха","SSG 08 (Scout)","Scout","Ваншот с мухи!","Um tiro de scout!"],
+["arma","Калаш","АК-47","AK-47","Калаш с хедшотом.","AK com headshot."],
+["arma","Эмка","M4A4 / M4A1-S","M4","Подобрал эмку.","Pegou uma M4."],
+["arma","Дигл","Desert Eagle","Deagle","Два хедшота с дигла.","Dois headshots de Deagle."],
+["arma","Глок","Glock","Glock","Пистолетка на глоках.","Pistol round de Glock."],
+["arma","Юсп","USP-S","USP","Ваншот с юспа.","Um tiro de USP."],
+["arma","Броня","кевлар","Colete (kevlar)","Без брони, только пистолет.","Sem colete, só pistola."],
+["arma","Шлем","каска","Capacete","Броня без шлема.","Colete sem capacete."],
+["arma","Кусачки","дефуза, кит","Kit de desarme","Без кусачек не успеет.","Sem kit não dá tempo."],
+["arma","Бомба","С4, сишка","Bomba (C4)","Бомба у лурка.","A bomba está com o lurker."],
+["arma","Нож","—","Faca","Бежит с ножом на ротацию.","Corre de faca para rotacionar."],
+
+["nade","Граната","гранаты, раскидка","Granada","Хорошая раскидка гранат.","Bom uso de granadas."],
+["nade","Флешка","flash","Flashbang","Отличная флешка от капитана.","Ótima flash do capitão."],
+["nade","Смок","дым, смоук","Smoke","Стреляет через смок.","Atira através da smoke."],
+["nade","Молотов","молик, зажигалка","Molotov / incendiária","Молотов выгоняет его с позиции.","A molotov expulsa ele da posição."],
+["nade","Хаешка","HE, граната","HE (granada explosiva)","Хаешка снимает пятьдесят хп.","A HE tira cinquenta de vida."],
+["nade","Утилити","utility","Utilitários (granadas no geral)","У них не осталось утилити.","Eles não têm mais utilitários."],
+["nade","ХП","HP; хп","Vida (pontos de vida)","У него всего восемь хп.","Ele está com só oito de vida."],
+
+["mapa","Точка","точка А / Б","Bombsite","Заход на точку Б.","Entrada no bomb B."],
+["mapa","Мид","mid","Meio do mapa","Драка за мид.","Briga pelo mid."],
+["mapa","Лонг","long","Long","Авик на лонге.","AWP no long."],
+["mapa","Шорт","short","Short","Выход через шорт.","Saída pelo short."],
+["mapa","Банан","Inferno","Banana (Inferno)","Контроль банана у Т.","Os TRs controlam o banana."],
+["mapa","Окно","Mirage","Janela (Mirage)","Снайпер в окне.","Sniper na janela."],
+["mapa","Коннектор","Mirage","Conector (Mirage)","Через коннектор на А.","Pelo conector para o A."],
+["mapa","Джангл","Mirage","Jungle (Mirage)","Держит джангл.","Segura o jungle."],
+["mapa","Палас","Mirage","Palace (Mirage)","Заход через палас.","Entrada pelo palace."],
+["mapa","Рампа","ramp","Rampa","Выход по рампе.","Saída pela rampa."],
+["mapa","Спавн","КТ-спавн, Т-спавн","Spawn","Ротация через КТ-спавн.","Rotação pelo spawn CT."],
+["mapa","Позиция","—","Posição","Агрессивная позиция.","Posição agressiva."],
+["mapa","Сторона атаки","за Т, атака","Lado TR","Сильная сторона атаки.","Lado TR forte."],
+["mapa","Сторона защиты","за КТ, защита, спецы","Lado CT","Двенадцать раундов на стороне защиты.","Doze rounds no lado CT."],
+
+["torneio","Карта","мапа","Mapa","Вторая карта, Нюк.","Segundo mapa, Nuke."],
+["torneio","Пик / бан","пикнуть, забанить","Pick / ban de mapas","Спирит пикают Анубис.","A Spirit escolhe Anubis."],
+["torneio","Десайдер","решающая карта","Mapa decisivo (decider)","Все решится на десайдере.","Tudo se decide no decider."],
+["torneio","Бо3","best of 3","MD3 (melhor de três)","Матч в формате бо3.","Partida em MD3."],
+["torneio","Овертайм","ОТ","Prorrogação","Мы идем в овертайм!","Vamos para a prorrogação!"],
+["torneio","Матч-поинт","мапа-поинт","Match point / map point","Матч-поинт у Фурии.","Match point para a FURIA."],
+["torneio","Таймаут","тактический таймаут","Timeout tático","Тренер берет таймаут.","O técnico pede timeout."],
+["torneio","Капитан","IGL","Capitão / IGL","Капитан меняет тактику.","O capitão muda a tática."],
+["torneio","Тренер","—","Técnico","Тренер Спирит, Халли.","O técnico da Spirit, hally."],
+["torneio","Групповой этап","—","Fase de grupos","Сложный групповой этап.","Fase de grupos difícil."],
+["torneio","Швейцарская система","—","Sistema suíço","Швейцарская система, три победы.","Sistema suíço, três vitórias."],
+["torneio","Плей-офф","—","Playoffs","Они выходят в плей-офф!","Eles vão para os playoffs!"],
+["torneio","Вылет","вылететь","Eliminação","Еще одно поражение, и вылет.","Mais uma derrota e é eliminação."],
+["torneio","Половина","первая/вторая половина","Metade (do mapa)","Первая половина за Т.","Primeira metade de TR."],
+["torneio","Рейтинг","rating","Rating (HLTV)","Рейтинг 1.4 за карту.","Rating de 1.4 no mapa."],
+
+["giria","Изи","easy","Fácil","Изи раунд для них.","Round fácil pra eles."],
+["giria","ГГ","GG","GG (bom jogo / acabou)","Это уже гг.","Agora já era, GG."],
+["giria","Катка","—","Partida (gíria)","Тяжелая катка.","Partida pesada."],
+["giria","Тиммейт","teammate","Companheiro de time","Спас тиммейта.","Salvou o colega."],
+["giria","Аим","aim","Mira","Аим у донка нереальный.","A mira do donk é surreal."],
+["giria","Скилл","skill","Habilidade","Чистый скилл.","Habilidade pura."],
+["giria","Рофл","ROFL","Piada, zoeira","Это какой-то рофл.","Isso é piada."],
+["giria","Душить","душный","Sufocar (jogo lento/travado)","Они душат весь раунд.","Eles travam o round inteiro."],
+["giria","Читер","—","Cheater (dito como elogio a jogada absurda)","Он что, читер?","Ele tá de hack, é?"],
+["giria","Слить","слили","Entregar / perder feio","Слили выигранный раунд.","Entregaram um round ganho."],
+["giria","Затащить","—","Carregar até a vitória","Он затащил карту.","Ele carregou o mapa."],
+["giria","Красавчик","—","Monstro! (elogio)","Красавчик, донк!","Monstro, donk!"]
+];
+
+const $=s=>document.querySelector(s);
+let active=null;
+const chips=$("#chips");
+function chip(key,label){const b=document.createElement("button");b.type="button";b.className="chip";b.textContent=label;b.setAttribute("aria-pressed",String(key===active));b.onclick=()=>{active=active===key?null:key;try{localStorage.setItem("cat",active||"")}catch(e){}renderChips();render()};chips.appendChild(b)}
+function renderChips(){chips.innerHTML="";chip(null,"Tudo");for(const k in CATS)chip(k,CATS[k])}
+try{const c=localStorage.getItem("cat");if(c&&CATS[c])active=c}catch(e){}
+
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function filtered(){const q=$("#q").value.trim().toLowerCase();return D.filter(r=>(!active||r[0]===active)&&(!q||r.slice(1).join(" ").toLowerCase().includes(q)))}
+function render(){
+  const rows=filtered();const list=$("#list");
+  $("#count").textContent=rows.length+" de "+D.length+" termos";
+  if(!rows.length){list.innerHTML='<p class="empty">Nada encontrado. Tente outra grafia ou limpe o filtro de categoria.</p>';return}
+  let h="";
+  for(const k in CATS){const g=rows.filter(r=>r[0]===k);if(!g.length)continue;
+    h+='<section class="cat"><h2>'+CATS[k]+' <span>'+g.length+'</span></h2>';
+    for(const r of g)h+='<div class="term"><div class="ru" lang="ru">'+esc(r[1])+(r[2]!=="—"?'<small>'+esc(r[2])+'</small>':'')+'</div><div class="pt">'+esc(r[3])+'<span class="ex"><q lang="ru">'+esc(r[4])+'</q> '+esc(r[5])+'</span></div></div>';
+    h+='</section>'}
+  list.innerHTML=h;
+}
+function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2400)}
+$("#q").addEventListener("input",render);
+$("#copy").addEventListener("click",()=>{
+  const rows=filtered();
+  const tsv=rows.map(r=>[r[1]+(r[2]!=="—"?" ("+r[2]+")":""),r[3],r[4]+" — "+r[5],"cs2 "+r[0]].join("\t")).join("\n");
+  const ta=$("#tsv");ta.value=tsv;
+  navigator.clipboard.writeText(tsv).then(()=>{ta.hidden=true;toast(rows.length+" cartões copiados. No Anki: Arquivo → Importar, separador Tab.")}).catch(()=>{ta.hidden=false;ta.focus();ta.select();toast("Copie o texto selecionado (Ctrl+C).")});
+});
+renderChips();render();
+</script>
+
+</body></html>
